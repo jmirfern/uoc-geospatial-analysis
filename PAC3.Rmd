@@ -1,42 +1,47 @@
-
 ---
 title: "PAC3"
 output: html_notebook
 ---
 
+# PAC3
+
+```{r Llibreries}
+
+# Instal·lació i càrrega de paquets necessaris
+if (!require(ggplot2)) install.packages("ggplot2", dependencies = TRUE)
+if (!require(sf)) install.packages("sf", dependencies = TRUE)
+if (!require(raster)) install.packages("raster", dependencies = TRUE)
+if (!require(gstat)) install.packages("gstat", dependencies = TRUE)
+```
+
 ## Exercici 1: Anàlisi i visualització de patrons de punts
 
 ```{r Exercici 1}
-set.seed(100) # Estableix una llavor per a la generaci´o de nombres aleatoris, assegurant que els resultats siguin reproduïbles.→
-n_ciutats <- 20 # Defineix el nombre de ciutats que es crearan, en aquest cas, 15.
-ciutats <- data.frame( # Crea un data frame anomenat "ciutats"
-  nom = paste0("Ciutat ", LETTERS[1:n_ciutats]), # Genera noms per a les ciutats utilitzant les lletres majúscules (Ciutat A, Ciutat B, etc.) 
-  longitud = runif(n_ciutats, -20, 20), # Genera longituds aleatòries per a les ciutats dins del rang de -20 a 20.
-  latitud = runif(n_ciutats, 10, 50), # Genera latituds aleatòries per a les ciutats dins del rang de 10 a 50.→
-  poblacio = sample(10000:100000, n_ciutats, replace = TRUE) # Genera poblacions aleatòries per a les ciutats dins del rang de 10000 a 100000, permetent valors repetits (replace = TRUE).
-)
-
-# Instal·lem el paquet
-if (!require(ggplot2)) {
-  install.packages("ggplot2", dependencies = TRUE)
-}
 
 # Carreguem paquet
 library(ggplot2)
 
-# Plot bàsic de punts amb latitud i longitud
+set.seed(100) # Establim una llavor para a la reproduibilitat
+n_ciutats <- 20 # Definim el nombre de ciutats que es crearan
+ciutats <- data.frame( 
+  nom = paste0("Ciutat ", LETTERS[1:n_ciutats]), # Genera noms per a les ciutats 
+  longitud = runif(n_ciutats, -20, 20), # Genera longituds aleatòries 
+  latitud = runif(n_ciutats, 10, 50), # Genera latituds aleatòries
+  poblacio = sample(10000:100000, n_ciutats, replace = TRUE) # Genera poblacions aleatòries
+)
+
+# Generem un plot bàsic de punts amb latitud i longitud
 ggplot(ciutats, aes(x = longitud, y = latitud)) +
 geom_point() +
 labs(title = "Localització de les Ciutats", x = "Longitud", y = "Latitud")
 
 
-# Crea un plot de dispersió de longitud i latitud on la mida dels punts és proporcional a la població de cada ciutat
+# Creem un plot de dispersió de longitud i latitud on la mida dels punts és proporcional a la població de cada ciutat
 ggplot(ciutats, aes(x = longitud, y = latitud, size = poblacio / 1e3)) +
-  geom_point() +
+  geom_point(color = "blue", alpha = 0.6) +
   labs(title = "Localització de les Ciutats", x = "Longitud", y = "Latitud", size = "Població (milers)") +
-  scale_size_continuous(range = c(1, 10)) # Ajusta la mida dels punts per a una millor visualització```
+  scale_size_continuous(range = c(1, 10)) # Ajustem la mida dels punts per a una millor visualització
 ```
-
 
 ## Exercici 2: Càlcul de mesures centrogràfiques
 
@@ -75,42 +80,78 @@ ggplot() +
   theme_minimal() # Tema minimalista per al gràfic
 ```
 
-
 ## Exercici 3: Descripció i aplicació de mètodes d'interpolació
-
 
 #### Descripció dels Mètodes d'Interpolació
 
-1. Polígons de Thiessen
-Principi bàsic: Aquest mètode divideix l'espai en regions (polígons) al voltant de cada punt de mostreig. Cada punt dins d'un polígon s'assigna al valor del punt de mostreig més proper. Els polígons es construeixen traçant línies perpendiculars als segments que uneixen els punts de mostreig.
-Avantatges: És senzill i no requereix supòsits sobre la distribució espacial de les dades.
-Limitacions: No té en compte la variació entre punts i pot produir resultats abruptes.
-Exemple d'aplicació: Assignació de precipitació a una regió basada en dades de pluviòmetres.
-2. Distància Inversa Ponderada (IDW)
-Principi bàsic: Aquest mètode estima el valor d'un punt desconegut com una mitjana ponderada dels valors dels punts de mostreig propers. Els pesos són inversament proporcionals a la distància entre el punt desconegut i els punts de mostreig.
-Avantatges: És fàcil d'implementar i permet ajustar la influència dels punts propers mitjançant un exponent.
-Limitacions: Assumeix que els punts més propers tenen més influència, cosa que pot no ser certa en tots els casos.
-Exemple d'aplicació: Estimació de la qualitat de l'aire en una ciutat basada en dades de sensors distribuïts.
-3. Krigatge Ordinari
-Principi bàsic: És un mètode geoestadístic que utilitza la variació espacial (semivariograma) per estimar els valors en punts desconeguts. Té en compte tant la distància com la correlació espacial entre punts.
-Avantatges: Proporciona estimacions òptimes i inclou una mesura d'incertesa.
-Limitacions: És més complex i requereix un coneixement previ de la variació espacial de les dades.
-Exemple d'aplicació: Estimació de la concentració de contaminants en el sòl o l'aigua.
+1.  Polígons de Thiessen
+
+-   Principi bàsic: Aquest mètode divideix l'espai en regions (polígons) al voltant de cada punt de mostreig. Cada punt dins d'un polígon s'assigna al valor del punt de mostreig més proper. Els polígons es construeixen traçant línies perpendiculars als segments que uneixen els punts de mostreig.
+-   Avantatges: És senzill i no requereix supòsits sobre la distribució espacial de les dades.
+-   Limitacions: No té en compte la variació entre punts i pot produir resultats abruptes.
+
+2.  Distància Inversa Ponderada (IDW)
+
+-   Principi bàsic: Aquest mètode estima el valor d'un punt desconegut com una mitjana ponderada dels valors dels punts de mostreig propers. Els pesos són inversament proporcionals a la distància entre el punt desconegut i els punts de mostreig.
+-   Avantatges: És fàcil d'implementar i permet ajustar la influència dels punts propers mitjançant un exponent.
+-   Limitacions: Assumeix que els punts més propers tenen més influència, cosa que pot no ser certa en tots els casos.
+
+3.  Krigatge Ordinari
+
+-   Principi bàsic: És un mètode geoestadístic que utilitza la variació espacial (semivariograma) per estimar els valors en punts desconeguts. Té en compte tant la distància com la correlació espacial entre punts.
+-   Avantatges: Proporciona estimacions òptimes i inclou una mesura d'incertesa.
+-   Limitacions: És més complex i requereix un coneixement previ de la variació espacial de les dades.
 
 #### Exemples d'Aplicació Pràctica
 
-Polígons de Thiessen: Assignació de zones de servei a hospitals o estacions de bombers.
-IDW: Creació de mapes de temperatura en una regió basada en dades de diverses estacions meteorològiques.
-Krigatge Ordinari: Estimació de reserves minerals en una mina o distribució de nutrients en camps agrícoles.
+Polígons de Thiessen: Assignació de zones de servei a hospitals o estacions de bombers. IDW: Creació de mapes de temperatura en una regió basada en dades de diverses estacions meteorològiques. Krigatge Ordinari: Estimació de reserves minerals en una mina o distribució de nutrients en camps agrícoles.
 
+## Exercici 4:
 
+```{r Exercici 4, echo=TRUE}
 
+library(sf)
+library(raster)
+library(gstat)
 
+# Generem un conjunt de dades simulades
+set.seed(123) # Per reproduïbilitat
+n_pluviometres <- 100
+pluviometres <- data.frame(
+  id = 1:n_pluviometres,
+  x = runif(n_pluviometres, 0, 100), # Coordenades X dins d'un rectangle
+  y = runif(n_pluviometres, 0, 100), # Coordenades Y dins d'un rectangle
+  pluja = runif(n_pluviometres, 0, 50) # Valors de pluja entre 0 i 50
+)
 
+# Convertim a objecte espacial amb sf
+pluviometres_sf <- st_as_sf(pluviometres, coords = c("x", "y"), crs = 4326)
 
+# Creem una malla per a la interpolació
+resolucio <- 1 # Resolució del raster
+x_range <- seq(0, 100, by = resolucio)
+y_range <- seq(0, 100, by = resolucio)
+grid <- expand.grid(x = x_range, y = y_range)
+grid_sf <- st_as_sf(grid, coords = c("x", "y"), crs = 4326)
 
+# Interpolem amb la tècnica IDW corregida
+gstat_model <- gstat::gstat(formula = pluja ~ 1, data = as(pluviometres_sf, "Spatial"), nmax = 10, set = list(idp = 2))
 
+# Convertim la malla a un objecte Spatial
+grid_sp <- as(grid_sf, "Spatial")
 
+# Realitzem la interpolació amb predict
+idw_result <- predict(gstat_model, newdata = grid_sp)
 
+# Convertim el resultat de la interpolació a un data frame
+idw_df <- as.data.frame(idw_result)
+colnames(idw_df)[1:3] <- c("x", "y", "var1.pred")
 
+# Convertim el resultat a un raster
+raster_result <- rasterFromXYZ(idw_df[, c("x", "y", "var1.pred")])
 
+# Visualitzem el raster resultant
+plot(raster_result, main = "Interpolació IDW de Pluja")
+points(st_coordinates(pluviometres_sf), col = "red", pch = 20, cex = 0.7) # Pluviòmetres
+
+```
