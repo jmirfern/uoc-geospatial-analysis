@@ -1,12 +1,11 @@
 ---
-title: "PAC3"
-output: html_notebook
+title: "PAC3: Aprendre a fer un anàlisi geoestadístic"
+output:
+  word_document:
+    reference_docx: default
 ---
 
-# PAC3
-
 ```{r Llibreries}
-
 # Instal·lació i càrrega de paquets necessaris
 if (!require(ggplot2)) install.packages("ggplot2", dependencies = TRUE)
 if (!require(sf)) install.packages("sf", dependencies = TRUE)
@@ -17,7 +16,6 @@ if (!require(gstat)) install.packages("gstat", dependencies = TRUE)
 ## Exercici 1: Anàlisi i visualització de patrons de punts
 
 ```{r Exercici 1}
-
 # Carreguem paquet
 library(ggplot2)
 
@@ -104,9 +102,11 @@ ggplot() +
 
 #### Exemples d'Aplicació Pràctica
 
-Polígons de Thiessen: Assignació de zones de servei a hospitals o estacions de bombers. IDW: Creació de mapes de temperatura en una regió basada en dades de diverses estacions meteorològiques. Krigatge Ordinari: Estimació de reserves minerals en una mina o distribució de nutrients en camps agrícoles.
+-   Polígons de Thiessen: Assignació de zones de servei a hospitals o estacions de bombers.
+-   IDW: Creació de mapes de temperatura en una regió basada en dades de diverses estacions meteorològiques.
+-   Krigatge Ordinari: Estimació de reserves minerals en una mina o distribució de nutrients en camps agrícoles.
 
-## Exercici 4:
+## Exercici 4: Interpolació amb R
 
 ```{r Exercici 4, echo=TRUE}
 
@@ -115,7 +115,7 @@ library(raster)
 library(gstat)
 
 # Generem un conjunt de dades simulades
-set.seed(123) # Per reproduïbilitat
+set.seed(100) # Per reproduïbilitat
 n_pluviometres <- 100
 pluviometres <- data.frame(
   id = 1:n_pluviometres,
