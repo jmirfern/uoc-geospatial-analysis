@@ -1,0 +1,52 @@
+
+---
+title: "PAC3"
+output: html_notebook
+---
+
+## Exercici 1
+
+```{r Exercici 1}
+set.seed(100) # Estableix una llavor per a la generaci´o de nombres aleatoris, assegurant que els resultats siguin reproduïbles.→
+n_ciutats <- 20 # Defineix el nombre de ciutats que es crearan, en aquest cas, 15.
+ciutats <- data.frame( # Crea un data frame anomenat "ciutats"
+  nom = paste0("Ciutat ", LETTERS[1:n_ciutats]), # Genera noms per a les ciutats utilitzant les lletres majúscules (Ciutat A, Ciutat B, etc.) 
+  longitud = runif(n_ciutats, -20, 20), # Genera longituds aleatòries per a les ciutats dins del rang de -20 a 20.
+  latitud = runif(n_ciutats, 10, 50), # Genera latituds aleatòries per a les ciutats dins del rang de 10 a 50.→
+  poblacio = sample(10000:100000, n_ciutats, replace = TRUE) # Genera poblacions aleatòries per a les ciutats dins del rang de 10000 a 100000, permetent valors repetits (replace = TRUE).
+)
+
+# Instal·lem el paquet
+if (!require(ggplot2)) {
+  install.packages("ggplot2", dependencies = TRUE)
+}
+
+# Carreguem paquet
+library(ggplot2)
+
+# Plot bàsic de punts amb latitud i longitud
+ggplot(ciutats, aes(x = longitud, y = latitud)) +
+geom_point() +
+labs(title = "Localització de les Ciutats", x = "Longitud", y = "Latitud")
+
+
+# Crea un plot de dispersió de longitud i latitud on la mida dels punts és proporcional a la població de cada ciutat
+ggplot(ciutats, aes(x = longitud, y = latitud, size = poblacio)) +
+  geom_point() +
+  labs(title = "Localització de les Ciutats", x = "Longitud", y = "Latitud", size = "Població") +
+  scale_size_continuous(range = c(1, 10)) # Ajusta la mida dels punts per a una millor visualització
+
+```
+
+## Exercici 2
+
+```{r Exercici 2}
+
+#Utilitzant el conjunt de dades de ciutats creat anteriorment:
+# - Calculem el centroide de les ciutats
+centroides <- data.frame(
+  longitud = mean(ciutats$longitud),
+  latitud = mean(ciutats$latitud)
+)
+
+```
