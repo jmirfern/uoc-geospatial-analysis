@@ -31,12 +31,12 @@ labs(title = "Localització de les Ciutats", x = "Longitud", y = "Latitud")
 
 
 # Crea un plot de dispersió de longitud i latitud on la mida dels punts és proporcional a la població de cada ciutat
-ggplot(ciutats, aes(x = longitud, y = latitud, size = poblacio)) +
+ggplot(ciutats, aes(x = longitud, y = latitud, size = poblacio / 1e3)) +
   geom_point() +
-  labs(title = "Localització de les Ciutats", x = "Longitud", y = "Latitud", size = "Població") +
-  scale_size_continuous(range = c(1, 10)) # Ajusta la mida dels punts per a una millor visualització
-
+  labs(title = "Localització de les Ciutats", x = "Longitud", y = "Latitud", size = "Població (milers)") +
+  scale_size_continuous(range = c(1, 10)) # Ajusta la mida dels punts per a una millor visualització```
 ```
+
 
 ## Exercici 2
 
@@ -49,4 +49,28 @@ centroides <- data.frame(
   latitud = mean(ciutats$latitud)
 )
 
+# - Calculem el centre mitjà ponderat, on les coordenades es ponderen per la població de cada ciutat
+centre_ponderat <- data.frame(
+  longitud = sum(ciutats$longitud * ciutats$poblacio) / sum(ciutats$poblacio),
+  latitud = sum(ciutats$latitud * ciutats$poblacio) / sum(ciutats$poblacio)
+)
+
+# - Creem un gràfic de dispersió amb ggplot2 que mostri la localització de les ciutats i afegiu també punts per al centroide i el centre mitjà ponderat.
+# Gràfic de dispersió amb ggplot2
+ggplot() +
+  geom_point(data = ciutats, aes(x = longitud, y = latitud, size = poblacio / 1e3, shape = "Ciutats"), color = "blue", alpha = 0.6) + # Punts per a les ciutats
+  geom_point(data = centroides, aes(x = longitud, y = latitud, shape = "Centroide"), color = "red", size = 4) + # Punt per al centroide
+  geom_point(data = centre_ponderat, aes(x = longitud, y = latitud, shape = "Centre Mitjà Ponderat"), color = "green", size = 4) + # Punt per al centre mitjà ponderat
+  scale_shape_manual(
+    values = c("Ciutats" = 16, "Centroide" = 17, "Centre Mitjà Ponderat" = 18), # Assigna formes personalitzades
+    name = "Tipus de Punt" # Nom de la llegenda
+  ) +
+  labs(
+    title = "Localització de les Ciutats amb Centroide i Centre Mitjà Ponderat",
+    x = "Longitud",
+    y = "Latitud",
+    size = "Població (milers)"
+  ) +
+  scale_size_continuous(range = c(1, 10)) + # Ajusta la mida dels punts
+  theme_minimal() # Tema minimalista per al gràfic
 ```
