@@ -4,7 +4,7 @@ title: "PAC3"
 output: html_notebook
 ---
 
-## Exercici 1
+## Exercici 1: Anàlisi i visualització de patrons de punts
 
 ```{r Exercici 1}
 set.seed(100) # Estableix una llavor per a la generaci´o de nombres aleatoris, assegurant que els resultats siguin reproduïbles.→
@@ -38,7 +38,7 @@ ggplot(ciutats, aes(x = longitud, y = latitud, size = poblacio / 1e3)) +
 ```
 
 
-## Exercici 2
+## Exercici 2: Càlcul de mesures centrogràfiques
 
 ```{r Exercici 2}
 
@@ -74,3 +74,43 @@ ggplot() +
   scale_size_continuous(range = c(1, 10)) + # Ajusta la mida dels punts
   theme_minimal() # Tema minimalista per al gràfic
 ```
+
+
+## Exercici 3: Descripció i aplicació de mètodes d'interpolació
+
+
+#### Descripció dels Mètodes d'Interpolació
+
+1. Polígons de Thiessen
+Principi bàsic: Aquest mètode divideix l'espai en regions (polígons) al voltant de cada punt de mostreig. Cada punt dins d'un polígon s'assigna al valor del punt de mostreig més proper. Els polígons es construeixen traçant línies perpendiculars als segments que uneixen els punts de mostreig.
+Avantatges: És senzill i no requereix supòsits sobre la distribució espacial de les dades.
+Limitacions: No té en compte la variació entre punts i pot produir resultats abruptes.
+Exemple d'aplicació: Assignació de precipitació a una regió basada en dades de pluviòmetres.
+2. Distància Inversa Ponderada (IDW)
+Principi bàsic: Aquest mètode estima el valor d'un punt desconegut com una mitjana ponderada dels valors dels punts de mostreig propers. Els pesos són inversament proporcionals a la distància entre el punt desconegut i els punts de mostreig.
+Avantatges: És fàcil d'implementar i permet ajustar la influència dels punts propers mitjançant un exponent.
+Limitacions: Assumeix que els punts més propers tenen més influència, cosa que pot no ser certa en tots els casos.
+Exemple d'aplicació: Estimació de la qualitat de l'aire en una ciutat basada en dades de sensors distribuïts.
+3. Krigatge Ordinari
+Principi bàsic: És un mètode geoestadístic que utilitza la variació espacial (semivariograma) per estimar els valors en punts desconeguts. Té en compte tant la distància com la correlació espacial entre punts.
+Avantatges: Proporciona estimacions òptimes i inclou una mesura d'incertesa.
+Limitacions: És més complex i requereix un coneixement previ de la variació espacial de les dades.
+Exemple d'aplicació: Estimació de la concentració de contaminants en el sòl o l'aigua.
+
+#### Exemples d'Aplicació Pràctica
+
+Polígons de Thiessen: Assignació de zones de servei a hospitals o estacions de bombers.
+IDW: Creació de mapes de temperatura en una regió basada en dades de diverses estacions meteorològiques.
+Krigatge Ordinari: Estimació de reserves minerals en una mina o distribució de nutrients en camps agrícoles.
+
+
+
+
+
+
+
+
+
+
+
+
