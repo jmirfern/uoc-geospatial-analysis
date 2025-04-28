@@ -3,13 +3,21 @@
 ### Càrrega de paquets necessaris
 
 ```{r Packages, warning=FALSE, include=FALSE}
-# Instal·la els paquets 'raster', 'ggplot2', 'dplyr' i 'sf' si no estan 
+# Instal·la els paquets 'raster', 'ggplot2', 'dplyr' i 'sf' si no estan
 # instal·lats.
 
-if(!require(raster)){install.packages("raster")}
-if(!require(ggplot2)){install.packages("ggplot2")}
-if( !require(dplyr)){install.packages("dplyr")}
-if(!require(sf)){install.packages("sf")}
+if (!require(raster)) {
+  install.packages("raster")
+}
+if (!require(ggplot2)) {
+  install.packages("ggplot2")
+}
+if (!require(dplyr)) {
+  install.packages("dplyr")
+}
+if (!require(sf)) {
+  install.packages("sf")
+}
 
 # Carrega els paquets 'raster', 'ggplot2', 'dplyr' i 'sf' a la sessió de R.
 library(raster)
@@ -21,11 +29,11 @@ library(sf)
 
 ### Càrrega de la imatge en R
 
-```{r}
+```{r Ex0_ImageLoading}
 # Defineix la ruta al directori que cont´e la imatge Sentinel-2. Posa la ruta on
 # tens les dades guardades. Pots utilitzar setwd("directori_dades"),
-knitr::opts_knit$set(root.dir = normalizePath('./Dades'))
-setwd('./Dades')
+knitr::opts_knit$set(root.dir = normalizePath("./Dades"))
+setwd("./Dades")
 
 # "directori_dades" ha de ser el directori on estan guardades les dades.
 directori_imatge <- "S2_Barcelona_20220721"
@@ -41,7 +49,7 @@ print(fitxers)
 imatge_stack <- stack(fitxers)
 # Defineix un vector amb els noms de les bandes (B01, B02, ..., B8A).
 nom_bandes <- c("B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09",
-"B11", "B12", "B8A")
+                "B11", "B12", "B8A")
 # Assigna els noms de les bandes a les capes del 'stack'.
 # Això facilita la identificació i l'accés a les diferents bandes.
 names(imatge_stack) <- nom_bandes
@@ -49,56 +57,59 @@ names(imatge_stack) <- nom_bandes
 plot(imatge_stack$B04, main = "Banda B04 (Vermell)")
 # Calcula el quantil 99.9% dels valors de la banda B04.
 # Aquest valor s'utilitzarà com a límit superior per a l'escala de colors.
-imatge_stack$B04 <-setMinMax(imatge_stack$B04)
+imatge_stack$B04 <- setMinMax(imatge_stack$B04)
 limit_superior <- quantile(imatge_stack$B04, 0.999)
 # Visualitza la banda B04 amb una escala de colors ajustada.
 # L'escala de colors ara va des del valor mínim fins al quantil 99.9%.
 # Això permet visualitzar millor la major part dels valors, ignorant els valors
 # atípics molt elevats.→
-plot(imatge_stack$B04, zlim = c(minValue(imatge_stack$B04), limit_superior), 
+plot(imatge_stack$B04, zlim = c(minValue(imatge_stack$B04), limit_superior),
      main = "Banda B04 (Vermell)")
 # Visualitza una imatge en color natural combinant les bandes vermella, verda i
 # blava.
 plotRGB(imatge_stack,
-  # Banda 4 (vermell), Banda 3 (verd),Banda 2 (blau)
-  r = 4, g = 3, b = 2,
-  # Estirament lineal per millorar el contrast.
-  stretch = "lin")
+        # Banda 4 (vermell), Banda 3 (verd),Banda 2 (blau)
+        r = 4, g = 3, b = 2,
+        # Estirament lineal per millorar el contrast.
+        stretch = "lin")
 ```
 
-```{r}
-knitr::opts_knit$set(root.dir = normalizePath('./Dades'))
-setwd('./Dades')
-# Defineix el nom del fitxer shapefile que cont´e els l´ımits municipals
-shp_fn = "Municipis/Municipios_IGN.shp"
+```{r Ex0_ImageCrop}
+knitr::opts_knit$set(root.dir = normalizePath("./Dades"))
+setwd("./Dades")
+# Defineix el nom del fitxer shapefile que conté els límits municipals
+shp_fn <- "Municipis/Municipios_IGN.shp"
 # Llegeix el fitxer shapefile utilitzant la llibreria 'sf'
 shp <- st_read(shp_fn)
 # Reprojecta el fitxer shapefile al mateix sistema de coordenades que l'imatge
 # raster
-# Aix`o ´es crucial per assegurar que les dades espacials coincideixin correctament
+# Això és crucial per assegurar que les dades espacials coincideixin
+# correctament
 shp_reprojected <- st_transform(shp, crs = crs(imatge_stack))
-# Filtra el fitxer shapefile reprojectat per seleccionar nom´es el pol´ıgon
+# Filtra el fitxer shapefile reprojectat per seleccionar nom´es el polígon
 # corresponent a Barcelona
-# Aix`o es fa utilitzant la columna 'NAMEUNIT' que cont´e els noms dels municipis
+# Això es fa utilitzant la columna 'NAMEUNIT' que conté els noms dels municipis
 barcelona <- shp_reprojected %>% filter(NAMEUNIT == "Barcelona")
 
-# Retalla la imatge raster ('imatge_stack') a l'extensi´o del pol´ıgon de Barcelona
-# Aix`o permet centrar l'an`alisi nom´es a la zona d'inter`es
-imatge_stack_crop = crop(imatge_stack,barcelona)
-# Aplica una m`ascara al raster retallat utilitzant el pol´ıgon de Barcelona
-# Aix`o elimina els p´ıxels fora del terme municipal de Barcelona, deixant nom´es
-# els p´ıxels dins→
-imatge_stack_crop_mask = mask(imatge_stack_crop,barcelona)
-# Visualitza l'imatge raster retallada i emmascarada utilitzant la funci´o
-# 'plotRGB'→
-# Aquesta funci´o permet visualitzar una combinaci´o de tres bandes del raster com
-# a imatge RGB→
+# Retalla la imatge raster ('imatge_stack') a l'extensió del polígon de
+# Barcelona
+# Això permet centrar l'anàlisi només a la zona d'interès
+imatge_stack_crop <- crop(imatge_stack, barcelona)
+# Aplica una màscara al raster retallat utilitzant el polígon de Barcelona
+# Això elimina els píxels fora del terme municipal de Barcelona, deixant només
+# els píxels dins
+imatge_stack_crop_mask <- mask(imatge_stack_crop, barcelona)
+# Visualitza l'imatge raster retallada i emmascarada utilitzant la funció
+# 'plotRGB'
+# Aquesta funció permet visualitzar una combinació de tres bandes del raster com
+# a imatge RGB
+
 plotRGB(imatge_stack_crop_mask,
-# Selecciona les bandes 4 (vermell), 3 (verd) i 2 (blau) per a la
-# visualitzaci´o RGB
-r = 4, g = 3, b = 2,
-# Aplica un estirament lineal per millorar el contrast de la imatge
-stretch = "lin")
+        # Selecciona les bandes 4 (vermell), 3 (verd) i 2 (blau) per a la
+        # visualització RGB
+        r = 4, g = 3, b = 2,
+        # Aplica un estirament lineal per millorar el contrast de la imatge
+        stretch = "lin")
 ```
 
 
