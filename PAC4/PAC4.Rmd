@@ -1,0 +1,51 @@
+# PAC 4: Anàlisi geoestadístic
+
+### Càrrega de paquets necessaris
+
+```{r Packages, warning=FALSE, include=FALSE}
+# Instal·la els paquets 'raster', 'ggplot2', 'dplyr' i 'sf' si no estan 
+# instal·lats.
+
+if(!require(raster)){install.packages("raster")}
+if(!require(ggplot2)){install.packages("ggplot2")}
+if( !require(dplyr)){install.packages("dplyr")}
+if(!require(sf)){install.packages("sf")}
+
+# Carrega els paquets 'raster', 'ggplot2', 'dplyr' i 'sf' a la sessió de R.
+library(raster)
+library(ggplot2)
+library(dplyr)
+library(sf)
+```
+
+### Càrrega de la imatge en R
+
+```{r}
+# Defineix la ruta al directori que cont´e la imatge Sentinel-2. Posa la ruta on
+# tens les dades guardades. Pots utilitzar setwd("directori_dades"),
+# Llegeix la ruta des d'un fitxer de configuració .txt
+# Suposem que el fitxer es diu "config.txt" i conté una línia amb la ruta
+fitxer_config <- "config.txt"
+
+# Llegeix el contingut del fitxer
+directori_dades <- readLines(fitxer_config, warn = FALSE)
+# Comprova si la ruta existeix
+if (dir.exists(directori)) {
+  print(paste("La ruta existeix:", directori))
+  setwd(directori) # Canvia el directori de treball
+} else {
+  stop(paste("Error: La ruta no existeix:", directori))
+}
+
+# Exemple d'ús: llistar els fitxers dins del directori
+fitxers <- list.files(directori, full.names = TRUE)
+print(fitxers)
+
+# "directori_dades" ha de ser el directori on estan guardades les dades.
+directori_imatge <- "S2_Barcelona_20220721"
+# Llista tots els fitxers i subdirectoris que hi ha dins del directori
+# especificat a la variable 'directori_imatge'.→
+fitxers <- list.files(directori_imatge, full.names = TRUE)
+# Imprimeix el contingut de la variable 'fitxers' a la consola de R.
+print(fitxers)
+```
