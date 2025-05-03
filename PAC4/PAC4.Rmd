@@ -175,7 +175,7 @@ par(mfrow = c(2, 2))
 
 plot_blau <- escala_ajustada(imatge_at_stack, "B02", "Blau", paleta_blava)
 plot_verd <- escala_ajustada(imatge_at_stack, "B03", "Verd", paleta_verda)
-plot_vermell <- escala_ajustada(imatge_at_stack, "B04", "Vermell", 
+plot_vermell <- escala_ajustada(imatge_at_stack, "B04", "Vermell",
                                 paleta_vermella)
 plot_nir <- escala_ajustada(imatge_at_stack, "B08", "NIR", paleta_vermella)
 
@@ -194,17 +194,17 @@ plotRGB(imatge_at_stack,
 
 ## Exercici 2 [30%]: Treball amb l’NDVI
 
-```{r}
+```{r Ex2}
 # Càlcul de l'índex NDVI
-# NDVI = (NIR - Vermell) / (NIF + Vermell)
-ndvi <- (imatge_at_stack$B08 - imatge_at_stack$B04) / 
+# Fòrmula NDVI = (NIR - Vermell) / (NIF + Vermell)
+ndvi <- (imatge_at_stack$B08 - imatge_at_stack$B04) /
   (imatge_at_stack$B08 + imatge_at_stack$B04)
 
 # Visualització de l'NDVI amb una escala de colors
-paleta_ndvi <- colorRampPalette(c("brown", "yellow", "green"))
-plot(ndvi, 
-     main = "Índex NDVI", 
-     col = paleta_ndvi(100), 
+paleta_ndvi <- colorRampPalette(c("yellow", "lightgreen", "darkgreen"))
+plot(ndvi,
+     main = "Índex NDVI",
+     col = paleta_ndvi(100),
      zlim = c(-1, 1))
 
 # Classificació de l'NDVI en tres categories
@@ -228,12 +228,72 @@ plot(ndvi_classificat,
      legend = FALSE)
 
 # Afegim una llegenda manual
-legend("right", 
-       legend = c("Zona àrida o aigua", "Prats i arbustos", "Bosc"), 
-       fill = colors_classificats, 
-       border = "black", 
-       bty = "n")
+legend("right",
+       inset = c(-0.2, 0),
+       legend = c("Zona àrida o aigua", "Prats i arbustos", "Bosc"),
+       fill = colors_classificats,
+       border = "black",
+       bty = "n",
+       xpd = TRUE)
 ```
 
+## Exercici 3 [40%]: Treball amb el NDWI
 
+```{r Ex3}
+# Defineix la ruta al directori que cont´e la imatge Sentinel-2. Posa la ruta on
+# tens les dades guardades. Pots utilitzar setwd("directori_dades"),
+knitr::opts_knit$set(root.dir = normalizePath("./Dades"))
+setwd("./Dades")
 
+# Càlcul de l'índex NDWI
+# NDWI = (Verd - NIR) / (Verd + NIR)
+ndwi <- (imatge_at_stack$B03 - imatge_at_stack$B08) / 
+  (imatge_at_stack$B03 + imatge_at_stack$B08)
+
+# Visualització de l'NDWI amb una escala de colors
+paleta_ndwi <- colorRampPalette(c("brown", "yellow", "blue"))
+plot(ndwi, 
+     main = "Índex NDWI",
+     col = paleta_ndwi(100),
+     zlim = c(-1, 1))
+
+# Identificació de masses d'aigua (NDWI > 0.1)
+aigua <- ndwi > 0.1
+
+# Carrega del shapefile del Parc Natural d'Aigüestortes
+shp_parc <- st_read("limits_Aiguestortes/Limite_Aigüastortes_i_Estany_Sant_Maurici.shp")
+
+# Reprojecta el shapefile al mateix sistema de coordenades que el raster
+shp_parc_reprojected <- st_transform(shp_parc, crs = crs(ndwi))
+
+# Retalla el raster NDWI a l'extensió del Parc Natural
+ndwi_crop_parc <- crop(ndwi, shp_parc_reprojected)
+ndwi_mask_parc <- mask(ndwi_crop_parc, shp_parc_reprojected)
+
+# Visualització del NDWI retallat al Parc Natural
+paleta_ndwi <- colorRampPalette(c("brown", "yellow", "blue"))
+plot(ndwi_mask_parc, 
+     main = "NDWI del Parc Natural d'Aigüestortes", 
+     col = paleta_ndwi(100), 
+     zlim = c(-1, 1))
+
+# Retalla el raster NDWI a l'extensió del Parc Natural
+ndwi_crop <- crop(aigua, shp_parc_reprojected)
+ndwi_mask <- mask(ndwi_crop, shp_parc_reprojected)
+
+# Visualització de les masses d'aigua dins del Parc Natural
+plot(ndwi_mask, 
+     main = "Masses d'Aigua dins del Parc Natural",
+     col = c("white", "blue"), 
+     legend = FALSE)
+
+# Càlcul de la superfície total del Parc Natural (en km²)
+superficie_parc <- st_area(shp_parc_reprojected) / 1e6
+print(paste("Superfície total del Parc Natural (km²):", round(sum(superficie_parc), 2)))
+
+# Càlcul de la superfície d'aigua dins del Parc Natural (en km²)
+resolucio <- res(ndwi_mask) # Resolució del píxel (en unitats del CRS)
+area_pixel <- prod(resolucio) / 1e6 # Àrea d'un píxel en km²
+superficie_aigua <- cellStats(ndwi_mask, sum) * area_pixel
+print(paste("Superfície d'aigua dins del Parc Natural (km²):", round(superficie_aigua, 2)))
+```
