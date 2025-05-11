@@ -1,10 +1,16 @@
+---
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+---
+
 # PAC 4: Anàlisi geoestadístic
 
 ### Càrrega de paquets necessaris
 
 ```{r Packages, warning=FALSE, include=FALSE}
-# Instal·la els paquets 'raster', 'ggplot2', 'dplyr' i 'sf' si no estan
-# instal·lats.
+# Instal·la els paquets necessaris
 
 if (!require(raster)) {
   install.packages("raster")
@@ -22,7 +28,7 @@ if (!require(gridExtra)) {
   install.packages("gridExtra")
 }
 
-# Carrega els paquets 'raster', 'ggplot2', 'dplyr' i 'sf' a la sessió de R.
+# Carrega els paquets a la sessió de R.
 library(raster)
 library(ggplot2)
 library(dplyr)
@@ -31,115 +37,26 @@ library(gridExtra)
 
 ```
 
-### Càrrega de la imatge en R
-
-```{r Ex0_ImageLoading}
-# Defineix la ruta al directori que cont´e la imatge Sentinel-2. Posa la ruta on
-# tens les dades guardades. Pots utilitzar setwd("directori_dades"),
-knitr::opts_knit$set(root.dir = normalizePath("./Dades"))
-setwd("./Dades")
-
-# "directori_dades" ha de ser el directori on estan guardades les dades.
-directori_imatge <- "S2_Barcelona_20220721"
-# Llista tots els fitxers i subdirectoris que hi ha dins del directori
-# especificat a la variable 'directori_imatge'.→
-fitxers <- list.files(directori_imatge, full.names = TRUE)
-# Imprimeix el contingut de la variable 'fitxers' a la consola de R.
-print(fitxers)
-# Crea un objecte 'stack' a partir dels fitxers de bandes.
-# Un 'stack' és una estructura de dades que conté múltiples capes raster (les
-# bandes).
-# Això permet treballar amb totes les bandes com un sol objecte.
-imatge_stack <- stack(fitxers)
-# Defineix un vector amb els noms de les bandes (B01, B02, ..., B8A).
-nom_bandes <- c("B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09",
-                "B11", "B12", "B8A")
-# Assigna els noms de les bandes a les capes del 'stack'.
-# Això facilita la identificació i l'accés a les diferents bandes.
-names(imatge_stack) <- nom_bandes
-# Visualitza la banda B04 (Vermell) amb l'escala de colors per defecte.
-plot(imatge_stack$B04, main = "Banda B04 (Vermell)")
-# Calcula el quantil 99.9% dels valors de la banda B04.
-# Aquest valor s'utilitzarà com a límit superior per a l'escala de colors.
-imatge_stack$B04 <- setMinMax(imatge_stack$B04)
-limit_superior <- quantile(imatge_stack$B04, 0.999)
-# Visualitza la banda B04 amb una escala de colors ajustada.
-# L'escala de colors ara va des del valor mínim fins al quantil 99.9%.
-# Això permet visualitzar millor la major part dels valors, ignorant els valors
-# atípics molt elevats.→
-plot(imatge_stack$B04, zlim = c(minValue(imatge_stack$B04), limit_superior),
-     main = "Banda B04 (Vermell)")
-# Visualitza una imatge en color natural combinant les bandes vermella, verda i
-# blava.
-plotRGB(imatge_stack,
-        # Banda 4 (vermell), Banda 3 (verd),Banda 2 (blau)
-        r = 4, g = 3, b = 2,
-        # Estirament lineal per millorar el contrast.
-        stretch = "lin")
-```
-
-```{r Ex0_ImageCrop}
-knitr::opts_knit$set(root.dir = normalizePath("./Dades"))
-setwd("./Dades")
-# Defineix el nom del fitxer shapefile que conté els límits municipals
-shp_fn <- "Municipis/Municipios_IGN.shp"
-# Llegeix el fitxer shapefile utilitzant la llibreria 'sf'
-shp <- st_read(shp_fn)
-# Reprojecta el fitxer shapefile al mateix sistema de coordenades que l'imatge
-# raster
-# Això és crucial per assegurar que les dades espacials coincideixin
-# correctament
-shp_reprojected <- st_transform(shp, crs = crs(imatge_stack))
-# Filtra el fitxer shapefile reprojectat per seleccionar nom´es el polígon
-# corresponent a Barcelona
-# Això es fa utilitzant la columna 'NAMEUNIT' que conté els noms dels municipis
-barcelona <- shp_reprojected %>% filter(NAMEUNIT == "Barcelona")
-
-# Retalla la imatge raster ('imatge_stack') a l'extensió del polígon de
-# Barcelona
-# Això permet centrar l'anàlisi només a la zona d'interès
-imatge_stack_crop <- crop(imatge_stack, barcelona)
-# Aplica una màscara al raster retallat utilitzant el polígon de Barcelona
-# Això elimina els píxels fora del terme municipal de Barcelona, deixant només
-# els píxels dins
-imatge_stack_crop_mask <- mask(imatge_stack_crop, barcelona)
-# Visualitza l'imatge raster retallada i emmascarada utilitzant la funció
-# 'plotRGB'
-# Aquesta funció permet visualitzar una combinació de tres bandes del raster com
-# a imatge RGB
-
-plotRGB(imatge_stack_crop_mask,
-        # Selecciona les bandes 4 (vermell), 3 (verd) i 2 (blau) per a la
-        # visualització RGB
-        r = 4, g = 3, b = 2,
-        # Aplica un estirament lineal per millorar el contrast de la imatge
-        stretch = "lin")
-```
-
 ### Exercici 1 [30%]: Lectura i visualització de la imatge
 
 ```{r Ex1}
-# Defineix la ruta al directori que cont´e la imatge Sentinel-2. Posa la ruta on
-# tens les dades guardades. Pots utilitzar setwd("directori_dades"),
-knitr::opts_knit$set(root.dir = normalizePath("./Dades"))
-setwd("./Dades")
 
-# "directori_dades" ha de ser el directori on estan guardades les dades.
-directori_imatge <- "S2_Aiguestortes_20220714"
-# Llista tots els fitxers i subdirectoris que hi ha dins del directori
+# Definim la ruta on accedirem a les dades de les imatges de Sentinel-2
+directori_imatge <- "./Dades/S2_Aiguestortes_20220714"
+# Llistem tots els fitxers i subdirectoris que hi ha dins del directori
 # especificat a la variable 'directori_imatge'
 fitxers <- list.files(directori_imatge, full.names = TRUE)
-# Imprimeix el contingut de la variable 'fitxers' a la consola de R.
+# Imprimimim el contingut de la variable 'fitxers' a la consola de R.
 print(fitxers)
-# Crea un objecte 'stack' a partir dels fitxers de bandes.
+# Creem un objecte 'stack' a partir dels fitxers de bandes.
 # Un 'stack' és una estructura de dades que conté múltiples capes raster (les
 # bandes).
 # Això permet treballar amb totes les bandes com un sol objecte.
 imatge_at_stack <- stack(fitxers)
-# Defineix un vector amb els noms de les bandes (B01, B02, ..., B8A).
+# Definim un vector amb els noms de les bandes (B01, B02, ..., B8A).
 nom_bandes <- c("B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09",
                 "B11", "B12", "B8A")
-# Assigna els noms de les bandes a les capes del 'stack'.
+# Assignem els noms de les bandes a les capes del 'stack'.
 # Això facilita la identificació i l'accés a les diferents bandes.
 names(imatge_at_stack) <- nom_bandes
 
@@ -170,7 +87,7 @@ escala_ajustada <- function(raster_stack, banda, titol_banda,
        col = paleta(100)) # Aplica la paleta de colors blava
 }
 
-# Configura la finestra gràfica per mostrar 2x2 gràfics
+# Configurem la finestra gràfica per mostrar 2x2 gràfics
 par(mfrow = c(2, 2))
 
 plot_blau <- escala_ajustada(imatge_at_stack, "B02", "Blau", paleta_blava)
@@ -179,10 +96,10 @@ plot_vermell <- escala_ajustada(imatge_at_stack, "B04", "Vermell",
                                 paleta_vermella)
 plot_nir <- escala_ajustada(imatge_at_stack, "B08", "NIR", paleta_vermella)
 
-# Restableix la configuració gràfica per defecte
+# Restablim la configuració gràfica per defecte
 par(mfrow = c(1, 1))
 
-# Visualitza una imatge en color natural combinant les bandes vermella, verda i
+# Visualitzem una imatge en color natural combinant les bandes vermella, verda i
 # blava.
 plotRGB(imatge_at_stack,
         # Banda 4 (vermell), Banda 3 (verd),Banda 2 (blau)
@@ -195,7 +112,8 @@ plotRGB(imatge_at_stack,
 ## Exercici 2 [30%]: Treball amb l’NDVI
 
 ```{r Ex2}
-# Càlcul de l'índex NDVI
+
+# Calculem l'índex NDVI
 # Fòrmula NDVI = (NIR - Vermell) / (NIF + Vermell)
 ndvi <- (imatge_at_stack$B08 - imatge_at_stack$B04) /
   (imatge_at_stack$B08 + imatge_at_stack$B04)
@@ -207,7 +125,7 @@ plot(ndvi,
      col = paleta_ndvi(100),
      zlim = c(-1, 1))
 
-# Classificació de l'NDVI en tres categories
+# Classifiquem l'indicador NDVI en tres categories
 # Definim els llindars per a les categories:
 # - Zona àrida o aigua: NDVI <= 0.2
 # - Prats i arbustos: 0.2 < NDVI <= 0.5
@@ -240,10 +158,6 @@ legend("right",
 ## Exercici 3 [40%]: Treball amb el NDWI
 
 ```{r Ex3}
-# Defineix la ruta al directori que cont´e la imatge Sentinel-2. Posa la ruta on
-# tens les dades guardades. Pots utilitzar setwd("directori_dades"),
-knitr::opts_knit$set(root.dir = normalizePath("./Dades"))
-setwd("./Dades")
 
 # Càlcul de l'índex NDWI
 # NDWI = (Verd - NIR) / (Verd + NIR)
@@ -261,7 +175,9 @@ plot(ndwi,
 aigua <- ndwi > 0.1
 
 # Carrega del shapefile del Parc Natural d'Aigüestortes
-shp_parc <- st_read("limits_Aiguestortes/Limite_Aigüastortes_i_Estany_Sant_Maurici.shp")
+shp_parc <- st_read(
+  "./Dades/limits_Aiguestortes/Limite_Aigüastortes_i_Estany_Sant_Maurici.shp"
+)
 
 # Reprojecta el shapefile al mateix sistema de coordenades que el raster
 shp_parc_reprojected <- st_transform(shp_parc, crs = crs(ndwi))
@@ -278,22 +194,23 @@ plot(ndwi_mask_parc,
      zlim = c(-1, 1))
 
 # Retalla el raster NDWI a l'extensió del Parc Natural
-ndwi_crop <- crop(aigua, shp_parc_reprojected)
-ndwi_mask <- mask(ndwi_crop, shp_parc_reprojected)
+ndwi_crop_aigua <- crop(aigua, shp_parc_reprojected)
+ndwi_mask_aigua <- mask(ndwi_crop_aigua, shp_parc_reprojected)
 
 # Visualització de les masses d'aigua dins del Parc Natural
-plot(ndwi_mask, 
+plot(ndwi_mask_aigua, 
      main = "Masses d'Aigua dins del Parc Natural",
      col = c("white", "blue"), 
      legend = FALSE)
 
 # Càlcul de la superfície total del Parc Natural (en km²)
 superficie_parc <- st_area(shp_parc_reprojected) / 1e6
-print(paste("Superfície total del Parc Natural (km²):", round(sum(superficie_parc), 2)))
+print(paste("Superfície total del Parc Natural (km2):", round(sum(superficie_parc), 2)))
 
-# Càlcul de la superfície d'aigua dins del Parc Natural (en km²)
-resolucio <- res(ndwi_mask) # Resolució del píxel (en unitats del CRS)
-area_pixel <- prod(resolucio) / 1e6 # Àrea d'un píxel en km²
-superficie_aigua <- cellStats(ndwi_mask, sum) * area_pixel
-print(paste("Superfície d'aigua dins del Parc Natural (km²):", round(superficie_aigua, 2)))
+# Comptem el nombre de píxels vàlids que representen zoned d'aigua
+pixels_aigua <- cellStats(ndwi_mask_aigua, sum)
+# Comptem el nombre de píxels vàlids (no NA) 
+pixels_parc <- cellStats(!is.na(ndwi_mask_parc), sum)
+superficie_aigua <- pixels_aigua / pixels_parc * superficie_parc
+print(paste("Superfície d'aigua dins del Parc Natural (km2):", round(superficie_aigua, 2)))
 ```
