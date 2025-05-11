@@ -140,9 +140,9 @@ ndvi_classificat <- reclassify(ndvi, llindars)
 
 # Visualització de l'NDVI classificat amb colors representatius
 colors_classificats <- c("brown", "lightgreen", "darkgreen")
-plot(ndvi_classificat, 
-     main = "NDVI Classificat", 
-     col = colors_classificats, 
+plot(ndvi_classificat,
+     main = "NDVI Classificat",
+     col = colors_classificats,
      legend = FALSE)
 
 # Afegim una llegenda manual
@@ -161,12 +161,12 @@ legend("right",
 
 # Càlcul de l'índex NDWI
 # NDWI = (Verd - NIR) / (Verd + NIR)
-ndwi <- (imatge_at_stack$B03 - imatge_at_stack$B08) / 
+ndwi <- (imatge_at_stack$B03 - imatge_at_stack$B08) /
   (imatge_at_stack$B03 + imatge_at_stack$B08)
 
 # Visualització de l'NDWI amb una escala de colors
 paleta_ndwi <- colorRampPalette(c("brown", "yellow", "blue"))
-plot(ndwi, 
+plot(ndwi,
      main = "Índex NDWI",
      col = paleta_ndwi(100),
      zlim = c(-1, 1))
@@ -188,9 +188,9 @@ ndwi_mask_parc <- mask(ndwi_crop_parc, shp_parc_reprojected)
 
 # Visualització del NDWI retallat al Parc Natural
 paleta_ndwi <- colorRampPalette(c("brown", "yellow", "blue"))
-plot(ndwi_mask_parc, 
-     main = "NDWI del Parc Natural d'Aigüestortes", 
-     col = paleta_ndwi(100), 
+plot(ndwi_mask_parc,
+     main = "NDWI del Parc Natural d'Aigüestortes",
+     col = paleta_ndwi(100),
      zlim = c(-1, 1))
 
 # Retalla el raster NDWI a l'extensió del Parc Natural
@@ -198,19 +198,21 @@ ndwi_crop_aigua <- crop(aigua, shp_parc_reprojected)
 ndwi_mask_aigua <- mask(ndwi_crop_aigua, shp_parc_reprojected)
 
 # Visualització de les masses d'aigua dins del Parc Natural
-plot(ndwi_mask_aigua, 
+plot(ndwi_mask_aigua,
      main = "Masses d'Aigua dins del Parc Natural",
-     col = c("white", "blue"), 
+     col = c("white", "blue"),
      legend = FALSE)
 
 # Càlcul de la superfície total del Parc Natural (en km²)
 superficie_parc <- st_area(shp_parc_reprojected) / 1e6
-print(paste("Superfície total del Parc Natural (km2):", round(sum(superficie_parc), 2)))
+print(paste("Superfície total del Parc Natural (km2):",
+            round(sum(superficie_parc), 2)))
 
 # Comptem el nombre de píxels vàlids que representen zoned d'aigua
 pixels_aigua <- cellStats(ndwi_mask_aigua, sum)
-# Comptem el nombre de píxels vàlids (no NA) 
+# Comptem el nombre de píxels vàlids (no NA)
 pixels_parc <- cellStats(!is.na(ndwi_mask_parc), sum)
 superficie_aigua <- pixels_aigua / pixels_parc * superficie_parc
-print(paste("Superfície d'aigua dins del Parc Natural (km2):", round(superficie_aigua, 2)))
+print(paste("Superfície d'aigua dins del Parc Natural (km2):",
+            round(superficie_aigua, 2)))
 ```
