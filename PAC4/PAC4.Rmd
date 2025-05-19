@@ -1,15 +1,15 @@
 ---
+title: "PAC4 Anàlisi geoestadístic"
 output:
-  pdf_document:
-    latex_engine: xelatex
-  html_document: default
+  word_document:
+    reference_docx: "./PAC4_template.docx"
 ---
 
 # PAC 4: Anàlisi geoestadístic
 
 ### Càrrega de paquets necessaris
 
-```{r Packages, warning=FALSE, include=FALSE}
+```{r Packages, warning=FALSE}
 # Instal·la els paquets necessaris
 
 if (!require(raster)) {
@@ -37,7 +37,7 @@ library(gridExtra)
 
 ```
 
-### Exercici 1 [30%]: Lectura i visualització de la imatge
+## Exercici 1 [30%]: Lectura i visualització de la imatge {style="dark blue"}
 
 ```{r Ex1}
 
@@ -205,7 +205,7 @@ plot(ndwi_mask_aigua,
 
 # Càlcul de la superfície total del Parc Natural (en km²)
 superficie_parc <- st_area(shp_parc_reprojected) / 1e6
-print(paste("Superfície total del Parc Natural (km2):",
+print(paste("Superfície total del Parc Natural (km²):",
             round(sum(superficie_parc), 2)))
 
 # Comptem el nombre de píxels vàlids que representen zoned d'aigua
@@ -213,6 +213,10 @@ pixels_aigua <- cellStats(ndwi_mask_aigua, sum)
 # Comptem el nombre de píxels vàlids (no NA)
 pixels_parc <- cellStats(!is.na(ndwi_mask_parc), sum)
 superficie_aigua <- pixels_aigua / pixels_parc * superficie_parc
-print(paste("Superfície d'aigua dins del Parc Natural (km2):",
+print(paste("Superfície d'aigua dins del Parc Natural (km²):",
             round(superficie_aigua, 2)))
 ```
+
+*Declaro que ostento l’autoria total i plena de totes les tasques que es duen a terme en el present document. Sóc l’única persona que ha elaborat cada exercici. No he compartit els enunciats amb ningú i l’única ajuda que he rebut ha estat a través de l’aula de la UOC i el seu professorat i he citat de forma explícita els recursos externs que he usat en la preparació de la PAC.*
+
+*Jonathan Mir Fernández-Aramburu, Març 2025*
