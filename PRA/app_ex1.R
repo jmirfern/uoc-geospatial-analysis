@@ -23,19 +23,48 @@ ui <- fluidPage(titlePanel("Calidad del Aire en Madrid"),
                       value = Sys.Date(),
                       max =
                         Sys.Date()
+                    ),
+                    selectInput(
+                      "station",
+                      "Selecciona Estació:",
+                      choices = NULL # Es carregarà dinàmicament
                     )
                   ),
                   mainPanel(
                     leafletOutput(outputId = "map", height = "500px"),
                     DT::dataTableOutput("data_table"),
-                    uiOutput("no_data_message") # User feedback on data availability
+                    uiOutput("no_data_message")
+                    # User feedback on data availability
                   )
                 ))
 server <- function(input, output, session) {
+  # En la parte del servidor, actualiza el selector de estaciones
+  observe({
+    req(input$pollutant, input$date)
+    estaciones <- air_data %>%
+      filter(nom_abv == input$pollutant, fecha == as.Date(input$date)) %>%
+      pull(id_name) %>%
+      unique()
+    
+    # Añade "Todas las estaciones" al principio de la lista
+    choices <- c("Todas las estaciones" = "all", setNames(estaciones, estaciones))
+    updateSelectInput(session, "station", choices = choices)
+  })
   filtered_data <- reactive({
-    req(input$pollutant, input$date) # Ensure required inputs are available
-    air_data %>%
-      filter(nom_abv == input$pollutant, fecha == as.Date(input$date))
+    req(input$pollutant, input$date, input$station)
+    
+    base_filter <- air_data %>%
+      filter(
+        nom_abv == input$pollutant,
+        fecha == as.Date(input$date)
+      )
+    
+    if (input$station != "all") {
+      base_filter <- base_filter %>%
+        filter(id_name == input$station)
+    }
+    
+    base_filter
   })
   output$map <- renderLeaflet({
     data_for_map <- filtered_data()
@@ -73,8 +102,15 @@ server <- function(input, output, session) {
     data_for_table <- filtered_data() %>%
       select(id_name, fecha, valor, nom_mag, ud_med)
     # Select specific columns for the table
-    
     datatable(data_for_table, options = list(pageLength = 5, autoWidth = TRUE))
+  })
+  output$no_data_message <- renderUI({
+    if (nrow(filtered_data()) == 0) {
+      tags$div(
+        style = "color: red; font-weight: bold;",
+        "No hi ha dades disponibles per a la selecció."
+      )
+    }
   })
 }
 shinyApp(ui = ui, server = server)
