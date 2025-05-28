@@ -23,12 +23,18 @@ ui <- fluidPage(titlePanel("Calidad del Aire en Madrid"),
                       value = Sys.Date(),
                       max =
                         Sys.Date()
+                    ),
+                    selectInput(
+                      "station",
+                      "Selecciona Estació:",
+                      choices = NULL # Es carregarà dinàmicament
                     )
                   ),
                   mainPanel(
                     leafletOutput(outputId = "map", height = "500px"),
                     DT::dataTableOutput("data_table"),
-                    uiOutput("no_data_message") # User feedback on data availability
+                    uiOutput("no_data_message")
+                    # User feedback on data availability
                   )
                 ))
 server <- function(input, output, session) {
@@ -73,7 +79,6 @@ server <- function(input, output, session) {
     data_for_table <- filtered_data() %>%
       select(id_name, fecha, valor, nom_mag, ud_med)
     # Select specific columns for the table
-    
     datatable(data_for_table, options = list(pageLength = 5, autoWidth = TRUE))
   })
 }
