@@ -4,6 +4,7 @@ library(dplyr)
 library(shinyjs)
 library(DT)
 library(sf)
+library(gstat)
 air_data <- readRDS("air_mad.RDS")
 temp_dir <- tempdir()
 unzip("Distritos.zip", exdir = temp_dir)
@@ -80,9 +81,20 @@ server <- function(input, output, session) {
       inter <- st_intersects(distritos, estacions_sf)
       for (i in seq_along(inter)) {
         if (length(inter[[i]]) > 0) {
-          # Si hi ha més d'una estació, agafa la primera (pots adaptar-ho)
           distritos$valor[i] <- estacions_sf$valor[inter[[i]][1]]
         }
+      }
+      # INTERPOLACIÓ IDW pels districtes sense valor
+      idx_na <- which(is.na(distritos$valor))
+      if (length(idx_na) > 0 && nrow(estacions_sf) > 1) {
+        # Crea la malla de punts als centroides dels districtes sense valor
+        centroids <- st_centroid(distritos[idx_na, ])
+        # Prepara les dades per gstat
+        estacions_sp <- as(estacions_sf, "Spatial")
+        centroids_sp <- as(centroids, "Spatial")
+        idw_model <- gstat::idw(valor ~ 1, estacions_sp, newdata = centroids_sp)
+        # Assigna el valor interpolat als districtes sense valor
+        distritos$valor[idx_na] <- idw_model$var1.pred
       }
     }
     distritos
