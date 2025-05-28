@@ -19,7 +19,6 @@ ui <- fluidPage(titlePanel("Calidad del Aire en Madrid"),
                   mainPanel(
                     leafletOutput(outputId = "map", height = "500px"),
                     plotOutput("line_plot"),
-                    DT::dataTableOutput("data_table"),
                     uiOutput("no_data_message")
                   )
                 ))
@@ -80,7 +79,8 @@ server <- function(input, output, session) {
         fillColor = ~ pal(valor),
         fillOpacity =
           0.7,
-        popup = ~ paste(nom_mag, valor, ud_med)
+        popup = ~ paste(nom_mag, valor, ud_med),
+        layerId = ~id_name
       )
   })
   output$data_table <- DT::renderDataTable({
@@ -116,8 +116,11 @@ server <- function(input, output, session) {
       )
   })
   observeEvent(input$map_marker_click, {
-    station_clicked <- input$map_marker_click$id
-    updateSelectInput(session, "station", selected = station_clicked)
+    # Només permet la selecció interactiva si està seleccionada "Totes les estacions"
+    if (input$station == "all") {
+      station_clicked <- input$map_marker_click$id
+      updateSelectInput(session, "station", selected = station_clicked)
+    }
   })
 }
 shinyApp(ui = ui, server = server)
