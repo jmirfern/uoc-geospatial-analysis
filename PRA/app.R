@@ -23,6 +23,11 @@ ui <- fluidPage(titlePanel("Calidad del Aire en Madrid"),
                       value = Sys.Date(),
                       max =
                         Sys.Date()
+                    ),
+                    selectInput(
+                      "station",
+                      "Selecciona Estació:",
+                      choices = NULL # Es carregarà dinàmicament
                     )
                   ),
                   mainPanel(
@@ -75,6 +80,14 @@ server <- function(input, output, session) {
       select(id_name, fecha, valor, nom_mag, ud_med)
     # Select specific columns for the table
     datatable(data_for_table, options = list(pageLength = 5, autoWidth = TRUE))
+  })
+  observe({
+    req(input$pollutant, input$date)
+    estacions <- air_data %>%
+      filter(nom_abv == input$pollutant, fecha == as.Date(input$date)) %>%
+      pull(id_name) %>%
+      unique()
+    updateSelectInput(session, "station", choices = estacions)
   })
 }
 shinyApp(ui = ui, server = server)
