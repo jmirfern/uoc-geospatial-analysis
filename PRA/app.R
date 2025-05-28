@@ -39,9 +39,13 @@ ui <- fluidPage(titlePanel("Calidad del Aire en Madrid"),
                 ))
 server <- function(input, output, session) {
   filtered_data <- reactive({
-    req(input$pollutant, input$date) # Ensure required inputs are available
+    req(input$pollutant, input$date, input$station)
     air_data %>%
-      filter(nom_abv == input$pollutant, fecha == as.Date(input$date))
+      filter(
+        nom_abv == input$pollutant,
+        fecha == as.Date(input$date),
+        id_name == input$station
+      )
   })
   output$map <- renderLeaflet({
     data_for_map <- filtered_data()
@@ -88,6 +92,14 @@ server <- function(input, output, session) {
       pull(id_name) %>%
       unique()
     updateSelectInput(session, "station", choices = estacions)
+  })
+  output$no_data_message <- renderUI({
+    if (nrow(filtered_data()) == 0) {
+      tags$div(
+        style = "color: red; font-weight: bold;",
+        "No hi ha dades disponibles per a la selecció."
+      )
+    }
   })
 }
 shinyApp(ui = ui, server = server)
